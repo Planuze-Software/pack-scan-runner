@@ -1,8 +1,13 @@
 # Planuze Pack Scan Runner
 
-Este repositório público executa o scan central atestado usado por releases de packs
-originados fora do GitHub Actions. Ele não recebe código-fonte por checkout, não recebe
+Este repositório público executa o scan central atestado usado por releases de packs em qualquer
+provider, inclusive GitHub Actions. Ele não recebe código-fonte por checkout, não recebe
 identificadores do artefato como input e não armazena artifacts do GitHub.
+
+Callers GitHub também podem usar a composite action H2 fixada por SHA para instalar a CLI com o
+lock revisado. Essa action apenas prepara o runtime fora do workspace: não recebe secrets, não lê o
+pack e não é autoridade do scan. O caller remove a credencial OIDC do próprio job e o Registry
+dispara H4/H3 para escanear o blob exato já recebido.
 
 ## Fronteira de confiança
 
@@ -45,7 +50,8 @@ vincular um run ao upload, ele relê a execução pela API do GitHub e exige
 
 ## Runtime congelado
 
-O reusable usa Node 24.16.0 e chama a action remota fixada em H2. Essa action instala a CLI a partir de
+O reusable usa Node 24.16.0 e chama a action remota fixada em H2. Callers GitHub provider-neutral
+podem fixar a mesma action exatamente no SHA H2. Essa action instala a CLI a partir de
 `.github/actions/pack-scan-runtime/package-lock.json`. A instalação ocorre fora do
 workspace, com ambiente npm limpo, registry oficial fixo, lifecycle scripts
 desativados e integridades do lock verificadas. O checkout de qualquer publisher não
