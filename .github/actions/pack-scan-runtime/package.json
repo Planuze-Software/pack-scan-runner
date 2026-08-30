@@ -1,0 +1,10 @@
+{
+  "name": "@planuze/pack-scan-workflow-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Grafo imutável usado exclusivamente pelo workflow central de scan.",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@planuze/pack-publisher": "0.4.1"
+  }
+}

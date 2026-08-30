@@ -1,0 +1,95 @@
+name: Prepare trusted Planuze central scan runtime
+description: Instala o grafo imutável do scanner fora do workspace.
+
+outputs:
+  cli_path:
+    description: Caminho absoluto do binário Planuze validado.
+    value: ${{ steps.runtime.outputs.cli_path }}
+  install_root:
+    description: Raiz temporária do runtime para cleanup do reusable workflow.
+    value: ${{ steps.runtime.outputs.install_root }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install locked runtime outside workspace
+      id: runtime
+      shell: bash
+      env:
+        PLANUZE_ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        action_root="$(realpath -e -- "$PLANUZE_ACTION_PATH")"
+        if [ -f "$action_root/LOCK_PENDING" ] || [ ! -f "$action_root/package-lock.json" ]; then
+          echo '::error::Runtime central ainda não possui lock imutável executável.' >&2
+          exit 1
+        fi
+        for manifest in package.json package-lock.json; do
+          source_file="$action_root/$manifest"
+          if [ ! -f "$source_file" ] || [ -L "$source_file" ]; then
+            echo "::error::$manifest precisa ser arquivo regular do workflow confiável." >&2
+            exit 1
+          fi
+        done
+
+        install_root="$(mktemp -d "$RUNNER_TEMP/planuze-pack-scan-runtime.XXXXXX")"
+        chmod 700 "$install_root"
+        install_root="$(realpath -e -- "$install_root")"
+        case "$install_root/" in
+          "$RUNNER_TEMP/"*) ;;
+          *)
+            echo '::error::Runtime temporário saiu de RUNNER_TEMP.' >&2
+            exit 1
+            ;;
+        esac
+
+        runtime_ready=0
+        cleanup_incomplete_runtime() {
+          if [ "$runtime_ready" -ne 1 ] && [[ "$install_root" == "$RUNNER_TEMP"/* ]]; then
+            rm -rf -- "$install_root"
+          fi
+        }
+        trap cleanup_incomplete_runtime EXIT HUP INT TERM
+
+        install -m 600 "$action_root/package.json" "$install_root/package.json"
+        install -m 600 "$action_root/package-lock.json" "$install_root/package-lock.json"
+        user_npmrc="$install_root/user.npmrc"
+        global_npmrc="$install_root/global.npmrc"
+        cache_root="$install_root/npm-cache"
+        home_root="$install_root/home"
+        mkdir -m 700 "$cache_root" "$home_root"
+        printf '%s\n' 'registry=https://registry.npmjs.org/' > "$user_npmrc"
+        : > "$global_npmrc"
+        chmod 600 "$user_npmrc" "$global_npmrc"
+
+        (
+          cd "$install_root"
+          env -i \
+            HOME="$home_root" \
+            PATH="$PATH" \
+            CI=true \
+            NPM_CONFIG_USERCONFIG="$user_npmrc" \
+            NPM_CONFIG_GLOBALCONFIG="$global_npmrc" \
+            NPM_CONFIG_CACHE="$cache_root" \
+            NPM_CONFIG_REGISTRY='https://registry.npmjs.org/' \
+            npm ci --ignore-scripts --omit=dev --no-audit --no-fund
+        )
+
+        cli_link="$install_root/node_modules/.bin/planuze"
+        if [ ! -x "$cli_link" ]; then
+          echo '::error::O package-lock não forneceu o binário planuze.' >&2
+          exit 1
+        fi
+        cli_path="$(realpath -e -- "$cli_link")"
+        case "$cli_path/" in
+          "$install_root/"*) ;;
+          *)
+            echo '::error::O binário planuze resolveu para fora do runtime confiável.' >&2
+            exit 1
+            ;;
+        esac
+        {
+          echo "cli_path=$cli_path"
+          echo "install_root=$install_root"
+        } >> "$GITHUB_OUTPUT"
+        runtime_ready=1

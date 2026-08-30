@@ -1,0 +1,19 @@
+{
+  "name": "@planuze/pack-scan-runner-repository",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workflow público e imutável para o scan central de packs Planuze.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "verify": "node scripts/verify.mjs --runtime-only",
+    "verify:full": "node scripts/verify.mjs",
+    "verify:runtime": "node scripts/verify.mjs --runtime-only",
+    "verify:source": "node scripts/verify.mjs --allow-pending-lock --allow-pending-refs"
+  },
+  "devDependencies": {
+    "yaml": "2.9.0"
+  }
+}
