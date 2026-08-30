@@ -1,0 +1,61 @@
+# Autoridade de scan central da ADR-0890. Não adicionar inputs, secrets ou checkout.
+name: Attested central Planuze pack scan
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  scan:
+    name: Scan exact encrypted artifact
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      id-token: write
+    steps:
+      - name: Setup trusted Node runtime
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.16.0'
+          registry-url: https://registry.npmjs.org
+
+      - name: Prepare immutable Planuze scanner graph
+        id: cli
+        uses: Planuze-Software/pack-scan-runner/.github/actions/pack-scan-runtime@ca0cfdb50d575788423c24da04b411ab85bc3da8
+
+      - name: Scan and attest exact registry artifact
+        shell: bash
+        env:
+          PLANUZE_CLI_PATH: ${{ steps.cli.outputs.cli_path }}
+        run: |
+          set -euo pipefail
+          cli_path="$(realpath -e -- "$PLANUZE_CLI_PATH")"
+          case "$cli_path/" in
+            "$RUNNER_TEMP/"*) ;;
+            *)
+              echo '::error::CLI confiável resolveu para fora de RUNNER_TEMP.' >&2
+              exit 1
+              ;;
+          esac
+          env \
+            -u NODE_OPTIONS \
+            -u NODE_PATH \
+            -u PLANUZE_REGISTRY_URL \
+            -u PLANUZE_PUBLISHER_TOKEN \
+            -u PLANUZE_PUBLISH_TOKEN \
+            -u PLANUZE_SIGNING_KEY \
+            -u PLANUZE_SIGNING_KEY_B64 \
+            -u PLANUZE_ESCROW_PUBLIC_KEY \
+            "$cli_path" pack scan-upload --ci-mode
+
+      - name: Cleanup trusted CLI runtime
+        if: always()
+        shell: bash
+        env:
+          CLI_INSTALL_ROOT: ${{ steps.cli.outputs.install_root }}
+        run: |
+          set -euo pipefail
+          if [ -n "$CLI_INSTALL_ROOT" ] && [[ "$CLI_INSTALL_ROOT" == "$RUNNER_TEMP"/* ]]; then
+            rm -rf -- "$CLI_INSTALL_ROOT"
+          fi
