@@ -1,0 +1,73 @@
+name: Verify runner invariants
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify immutable source and workflow policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository as data
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node 24
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.16.0'
+      - name: Install verification parser
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify immutable workflow contract
+        run: npm run verify
+      - name: Validate GitHub Actions syntax
+        run: bash scripts/verify-actionlint-linux.sh
+
+  runtime-boundary:
+    name: Verify locked runtime boundary
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Setup Node 24
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.16.0'
+          registry-url: https://registry.npmjs.org
+      - name: Prepare immutable Planuze scanner graph
+        id: cli
+        uses: Planuze-Software/pack-scan-runner/.github/actions/pack-scan-runtime@a3fc7dfc18658e328ecfd600cb40be991151202f
+      - name: Verify hidden command and sanitized failure boundary
+        shell: bash
+        env:
+          PLANUZE_CLI_PATH: ${{ steps.cli.outputs.cli_path }}
+        run: |
+          set -euo pipefail
+          set +e
+          output="$(env \
+            -u ACTIONS_ID_TOKEN_REQUEST_URL \
+            -u ACTIONS_ID_TOKEN_REQUEST_TOKEN \
+            -u PLANUZE_REGISTRY_URL \
+            "$PLANUZE_CLI_PATH" pack scan-upload --ci-mode 2>&1)"
+          status="$?"
+          set -e
+          test "$status" -eq 1
+          test "$output" = 'Erro: central_scan_failed'
+      - name: Cleanup trusted CLI runtime
+        if: always()
+        shell: bash
+        env:
+          CLI_INSTALL_ROOT: ${{ steps.cli.outputs.install_root }}
+        run: |
+          set -euo pipefail
+          if [ -n "$CLI_INSTALL_ROOT" ] && [[ "$CLI_INSTALL_ROOT" == "$RUNNER_TEMP"/* ]]; then
+            rm -rf -- "$CLI_INSTALL_ROOT"
+          fi

@@ -8,7 +8,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "verify": "node scripts/verify.mjs --runtime-only",
+    "verify": "node scripts/verify.mjs",
     "verify:full": "node scripts/verify.mjs",
     "verify:runtime": "node scripts/verify.mjs --runtime-only",
     "verify:source": "node scripts/verify.mjs --allow-pending-lock --allow-pending-refs"
