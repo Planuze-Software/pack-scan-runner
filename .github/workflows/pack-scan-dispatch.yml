@@ -1,0 +1,12 @@
+name: Dispatch central Planuze pack scan
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  scan:
+    permissions:
+      id-token: write
+    uses: Planuze-Software/pack-scan-runner/.github/workflows/pack-scan-central.yml@92b8f166250c4e77837d778d3cd658fa5e62b6be
