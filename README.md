@@ -35,7 +35,7 @@ regime best-effort tanto em sucesso quanto em falha.
 O rollout nunca aponta para `main`:
 
 1. **H2** contém a action de runtime e o lock completo da CLI
-   `@planuze/pack-publisher@0.4.3`.
+   `@planuze/pack-publisher@0.4.7`.
 2. **H3**, necessariamente posterior, adiciona
    `.github/workflows/pack-scan-central.yml` referenciando a action remota exatamente
    em H2. Isso evita depender do workspace do caller ou de checkout.

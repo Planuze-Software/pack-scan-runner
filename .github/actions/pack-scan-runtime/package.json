@@ -5,6 +5,6 @@
   "description": "Grafo imutável usado exclusivamente pelo workflow central de scan.",
   "license": "UNLICENSED",
   "dependencies": {
-    "@planuze/pack-publisher": "0.4.3"
+    "@planuze/pack-publisher": "0.4.7"
   }
 }

@@ -17,7 +17,7 @@ const runtimePackagePath = '.github/actions/pack-scan-runtime/package.json';
 const lockPath = '.github/actions/pack-scan-runtime/package-lock.json';
 const pendingPath = '.github/actions/pack-scan-runtime/LOCK_PENDING';
 const rootPackagePath = 'package.json';
-const expectedCliVersion = '0.4.3';
+const expectedCliVersion = '0.4.7';
 const expectedCheckoutUse = 'actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803';
 const expectedSetupNodeUse =
   'actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38';
