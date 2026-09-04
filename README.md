@@ -41,8 +41,8 @@ O rollout nunca aponta para `main`:
    em H2. Isso evita depender do workspace do caller ou de checkout.
 3. **H4**, necessariamente posterior, adiciona
    `.github/workflows/pack-scan-dispatch.yml` chamando o reusable exatamente em H3.
-4. A tag protegida `pack-scan-dispatch-v1` aponta uma única vez para H4. Atualizações
-   futuras criam uma nova tag versionada; a tag v1 não pode ser movida ou apagada.
+4. A tag protegida `pack-scan-dispatch-v2` aponta uma única vez para H4. Atualizações
+   futuras criam uma nova tag versionada; a tag v2 não pode ser movida ou apagada.
 
 O Worker `planuze-pack-registry` guarda H3 e H4 de forma independente. Antes de
 vincular um run ao upload, ele relê a execução pela API do GitHub e exige
@@ -83,11 +83,11 @@ Em **Settings → Actions → General**:
 
 Proteja `main` exigindo os dois checks do workflow `Verify runner invariants`:
 `Verify immutable source and workflow policy` e `Verify locked runtime boundary`.
-Antes de criar a tag, configure um ruleset para `pack-scan-dispatch-v1` que bloqueie
+Antes de criar a tag, configure um ruleset para `pack-scan-dispatch-v2` que bloqueie
 atualização e exclusão; a tag só pode ser criada depois de H4 passar pelos gates
 locais e remotos. Crie uma tag
 **lightweight** apontando diretamente para H4, pois o probe do Registry rejeita tags
-anotadas. Enquanto v1 estiver ativa, mantenha `pack-scan-dispatch.yml` presente e
+anotadas. Enquanto v2 estiver ativa, mantenha `pack-scan-dispatch.yml` presente e
 ativo na branch padrão; a API registra workflows pela branch padrão mesmo quando o
 dispatch seleciona a tag imutável. Habilite também Private Vulnerability Reporting
 para que incidentes não sejam expostos em issues.
