@@ -44,7 +44,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Prepare immutable Planuze scanner graph
         id: cli
-        uses: Planuze-Software/pack-scan-runner/.github/actions/pack-scan-runtime@bf702b28d758bf6eb9d5f29f06c3cacc230828d4
+        uses: Planuze-Software/pack-scan-runner/.github/actions/pack-scan-runtime@7f407b390f84b59cc66105cf5445ff2ae7465cf2
       - name: Verify hidden command and sanitized failure boundary
         shell: bash
         env:

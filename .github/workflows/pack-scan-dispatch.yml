@@ -9,4 +9,4 @@ jobs:
   scan:
     permissions:
       id-token: write
-    uses: Planuze-Software/pack-scan-runner/.github/workflows/pack-scan-central.yml@ec0e39dde18f88a633c968628e67d603480081b4
+    uses: Planuze-Software/pack-scan-runner/.github/workflows/pack-scan-central.yml@c2229e3d02adf1118a40fe61e85c9a9507546aa0
